@@ -14,5 +14,5 @@ Features:
 - Merging hg repos into git
 
 Authors:
-- @nipunn
+- @nipunn1313
 - @gnprice
