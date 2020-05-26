@@ -32,7 +32,7 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
     #     assume to be interpreted are \n and \\; in particular \t is not
     #     portable, and matches a 't' under most implementations of sed, rather
     #     than a tab character.
-    git filter-branch -f --index-filter \
+    git filter-branch -f --msg-filter 'python add_original_commits_filter.py $CHILD' --index-filter \
         'git ls-files -s | sed "s-	\"*-&$SUBDIR/-" |
             GIT_INDEX_FILE=$GIT_INDEX_FILE.new \
                 git update-index --index-info &&
