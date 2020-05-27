@@ -11,6 +11,9 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
 #  - $PARENT is a checkout of the parent repo in the cwd
 #  - $PARENT has a remote pointing to $CHILD (create with `git remote add child ../$CHILD`)
 # - bfg is installed in ./ (see https://rtyley.github.io/bfg-repo-cleaner/)
+# - the script add_original_commits_filter.py is also in ./
+
+ROOT="$(pwd)"
 
 (
     cd $CHILD
@@ -29,7 +32,7 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
     #     portable, and matches a 't' under most implementations of sed, rather
     #     than a tab character.
     index_filter_move_to_subdir='
-        git ls-files -s | sed "s-	\"*-&$SUBDIR/-" |
+        git ls-files -s | sed "s-	\"*-&'"$SUBDIR"'/-" |
            GIT_INDEX_FILE=$GIT_INDEX_FILE.new \
                git update-index --index-info &&
         mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"
@@ -38,7 +41,7 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
     # Add original commit IDs to commit messages,
     # and rewrite paths to move into $SUBDIR.
     git filter-branch -f \
-      --msg-filter 'python add_original_commits_filter.py $CHILD' \
+      --msg-filter "python $ROOT/add_original_commits_filter.py $CHILD" \
       --index-filter "$index_filter_move_to_subdir" \
       -- --all
 
@@ -56,6 +59,7 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
 
     for BRANCH in $BRANCHES_TO_MERGE; do
         git checkout -B $BRANCH $ORIG_MASTER  # New branch will have the same name as the original child branch
-        git merge -m "Merge $CHILD into $PARENT" $CHILD/${BRANCH}
+        git merge --allow-unrelated-histories \
+          -m "Merge $CHILD into $PARENT" $CHILD/${BRANCH}
     done
 )
