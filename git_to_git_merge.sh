@@ -20,11 +20,6 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
         git reset --hard origin/$BRANCH
     done
 
-    # Strip out large blobs and update commit messages with new commit-id
-    java -jar ../bfg-1.12.3.jar --strip-blobs-bigger-than 512K
-    git reflog expire --expire=now --all
-    git gc --prune=now --aggressive
-
     # Update index to prepend $CHILD/
     # http://git-scm.com/docs/git-filter-branch
     # Modified to have a literal tab character in the sed command because:
@@ -37,6 +32,9 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
             GIT_INDEX_FILE=$GIT_INDEX_FILE.new \
                 git update-index --index-info &&
          mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"' -- --all
+
+    # Strip out large blobs
+    java -jar ../bfg-1.12.3.jar --strip-blobs-bigger-than 512K
 
     git reflog expire --expire=now --all
     git gc --prune=now --aggressive
