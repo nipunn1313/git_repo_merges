@@ -1,0 +1,99 @@
+#!/bin/bash
+set -eu
+set -o pipefail
+
+die() {
+    echo
+    echo "Oh no!  Something failed."
+    echo >&2 FAIL
+    exit 1
+}
+
+trap 'die' EXIT
+
+this_file="$(readlink -f "${BASH_SOURCE[0]}")"
+root_dir="${this_file%/*}"
+
+tmpdir="$(mktemp -d)"
+cd "${tmpdir}"
+
+testci() {
+    local name="${1}"
+    echo "${name}" >"${name}" \
+      && git add "${name}" \
+      && git commit -m "${name}"
+}
+
+CHILD=child_git_repo
+PARENT=main_git_repo
+SUBDIR=child_dir
+
+git init "${CHILD}"
+cd "${CHILD}"
+testci a
+mkdir d
+testci d/b
+git remote add origin .
+git fetch origin
+cd ..
+
+git init "${PARENT}"
+cd "${PARENT}"
+testci x
+testci y
+git remote add "${CHILD}" ../"${CHILD}"
+cd ..
+
+# Horrible hack to skip the BFG step,
+# to simplify crude initial testing.
+mkdir bin
+cat >bin/java <<EOF
+#!/bin/sh
+exec true
+EOF
+chmod +x bin/java
+PATH="${tmpdir}/bin${PATH+:${PATH}}"
+
+export FILTER_BRANCH_SQUELCH_WARNING=1
+
+cp "${root_dir}"/add_original_commits_filter.py .
+bash -e "${root_dir}"/git_to_git_merge.sh
+
+cd "${PARENT}"
+
+git ls-files | diff -c <(cat <<EOF
+${SUBDIR}/a
+${SUBDIR}/d/b
+x
+y
+EOF
+) -
+
+git log --format=%s master^ | diff -c <(cat <<EOF
+y
+x
+EOF
+) -
+
+git ls-tree --name-only -r master^ | diff -c <(cat <<EOF
+x
+y
+EOF
+) -
+
+git log --format=%s master^2 | diff -c <(cat <<EOF
+d/b
+a
+EOF
+) -
+
+git ls-tree --name-only -r master^2 | diff -c <(cat <<EOF
+${SUBDIR}/a
+${SUBDIR}/d/b
+EOF
+) -
+
+echo
+echo "Tests passed!"
+
+trap - EXIT
