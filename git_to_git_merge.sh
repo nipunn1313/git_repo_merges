@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -x
 
 # Merges CHILD into PARENT in the subdir $PARENT/SUBDIR
