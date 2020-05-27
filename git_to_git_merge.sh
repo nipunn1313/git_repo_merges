@@ -14,9 +14,9 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
 #  - $PARENT is a checkout of the parent repo in the cwd
 #  - $PARENT has a remote pointing to $CHILD (create with `git remote add child ../$CHILD`)
 # - bfg is installed in ./ (see https://rtyley.github.io/bfg-repo-cleaner/)
-# - the script add_original_commits_filter.py is also in ./
 
-ROOT="$(pwd)"
+this_file="${BASH_SOURCE[0]}"
+script_dir="${this_file%/*}"
 
 (
     cd $CHILD
@@ -44,7 +44,7 @@ ROOT="$(pwd)"
     # Add original commit IDs to commit messages,
     # and rewrite paths to move into $SUBDIR.
     git filter-branch -f \
-      --msg-filter "python $ROOT/add_original_commits_filter.py $CHILD" \
+      --msg-filter "python ${script_dir}/add_original_commits_filter.py $CHILD" \
       --index-filter "$index_filter_move_to_subdir" \
       -- --all
 
