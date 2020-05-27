@@ -70,37 +70,36 @@ export FILTER_BRANCH_SQUELCH_WARNING=1
 
 cd "${PARENT}"
 
-git ls-files | diff -c <(cat <<EOF
+expect() {
+    diff -c --color=always --label=expected --label=actual /dev/fd/3 -
+}
+
+git ls-files | expect 3<<EOF
 ${SUBDIR}/a
 ${SUBDIR}/d/b
 x
 y
 EOF
-) -
 
-git log --format=%s master^ | diff -c <(cat <<EOF
+git log --format=%s master^ | expect 3<<EOF
 y
 x
 EOF
-) -
 
-git ls-tree --name-only -r master^ | diff -c <(cat <<EOF
+git ls-tree --name-only -r master^ | expect 3<<EOF
 x
 y
 EOF
-) -
 
-git log --format=%s master^2 | diff -c <(cat <<EOF
+git log --format=%s master^2 | expect 3<<EOF
 d/b
 a
 EOF
-) -
 
-git ls-tree --name-only -r master^2 | diff -c <(cat <<EOF
+git ls-tree --name-only -r master^2 | expect 3<<EOF
 ${SUBDIR}/a
 ${SUBDIR}/d/b
 EOF
-) -
 
 cd /
 rm -rf -- "${tmpdir}"
