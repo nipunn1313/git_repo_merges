@@ -20,18 +20,27 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
         git reset --hard origin/$BRANCH
     done
 
-    # Update index to prepend $CHILD/
-    # http://git-scm.com/docs/git-filter-branch
+    # From an example in the git-filter-branch documentation:
+    #   https://git.github.io/htmldocs/git-filter-branch.html
+    #
     # Modified to have a literal tab character in the sed command because:
     #     Note that the only C-like backslash sequences that you can portably
     #     assume to be interpreted are \n and \\; in particular \t is not
     #     portable, and matches a 't' under most implementations of sed, rather
     #     than a tab character.
-    git filter-branch -f --msg-filter 'python add_original_commits_filter.py $CHILD' --index-filter \
-        'git ls-files -s | sed "s-	\"*-&$SUBDIR/-" |
-            GIT_INDEX_FILE=$GIT_INDEX_FILE.new \
-                git update-index --index-info &&
-         mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"' -- --all
+    index_filter_move_to_subdir='
+        git ls-files -s | sed "s-	\"*-&$SUBDIR/-" |
+           GIT_INDEX_FILE=$GIT_INDEX_FILE.new \
+               git update-index --index-info &&
+        mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"
+    '
+
+    # Add original commit IDs to commit messages,
+    # and rewrite paths to move into $SUBDIR.
+    git filter-branch -f \
+      --msg-filter 'python add_original_commits_filter.py $CHILD' \
+      --index-filter "$index_filter_move_to_subdir" \
+      -- --all
 
     # Strip out large blobs
     java -jar ../bfg-1.12.3.jar --strip-blobs-bigger-than 512K
