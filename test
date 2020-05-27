@@ -57,7 +57,7 @@ PATH="${tmpdir}/bin${PATH+:${PATH}}"
 export FILTER_BRANCH_SQUELCH_WARNING=1
 
 cp "${root_dir}"/add_original_commits_filter.py .
-bash -e "${root_dir}"/git_to_git_merge.sh
+"${root_dir}"/git_to_git_merge.sh
 
 cd "${PARENT}"
 
