@@ -54,6 +54,16 @@ EOF
 chmod +x bin/java
 PATH="${tmpdir}/bin${PATH+:${PATH}}"
 
+# Since Git 2.24, `git filter-branch` prints a warning suggesting
+# there are spiffy new alternatives you might use instead, notably:
+#   https://github.com/newren/git-filter-repo/
+#
+# For an actual user of the main merge script, they should probably
+# look at the warning and consider the spiffy new alternatives!  So
+# the script doesn't try to suppress it.
+#
+# For this test script, though, the warning is just a nuisance.
+# Squelch it, following the instruction in the warning itself.
 export FILTER_BRANCH_SQUELCH_WARNING=1
 
 "${root_dir}"/git_to_git_merge.sh
