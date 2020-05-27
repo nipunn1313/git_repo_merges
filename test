@@ -102,6 +102,9 @@ ${SUBDIR}/d/b
 EOF
 ) -
 
+cd /
+rm -rf -- "${tmpdir}"
+
 echo
 echo "Tests passed!"
 
