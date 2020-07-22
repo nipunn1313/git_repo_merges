@@ -1,5 +1,5 @@
 Scripts and tools for merging git repos into each other while
-maintaining version history.
+maintaining version history - developed at Dropbox.
 
 Before using, make sure you read and understand the internals of the
 script!
