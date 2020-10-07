@@ -24,9 +24,9 @@ testci() {
       && git commit -m "${name}"
 }
 
-CHILD=child_git_repo
-PARENT=main_git_repo
-SUBDIR=child_dir
+export CHILD=child_git_repo
+export PARENT=main_git_repo
+export SUBDIR=child_dir
 
 git init "${CHILD}"
 cd "${CHILD}"

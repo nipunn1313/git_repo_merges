@@ -1,13 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-set -x
+set -ex
 
+# CONFIGURATION VARIABLES
+#  - caller should set these variables
+#   - these are the defaults
 # Merges CHILD into PARENT in the subdir $PARENT/SUBDIR
-CHILD=child_git_repo
-PARENT=main_git_repo
-SUBDIR=child_dir
-BRANCHES_TO_MERGE="master"  # Space separated list of branches
+: ${CHILD:=please_set_the_CHILD_env_variable}
+: ${PARENT:=please_set_the_PARENT_env_variable}
+: ${SUBDIR:=please_set_the_SUBDIR_env_variable}
+: ${BRANCHES_TO_MERGE:="master"}  # Space separated list of branches. Should include master explicitly.
+
+# PreReqs
+#
+# Clone https://github.com/nipunn1313/git_repo_merges as a sibling repo
+# Clone $CHILD and $PARENT as sibling repos
+# Install java (apt install default-jre)
+# Download https://rtyley.github.io/bfg-repo-cleaner/ as a sibling to the repos
+#
+# Must manually run from within the $PARENT - once
+# > git remote add "${CHILD}" ../"${CHILD}"
 
 # Assumes:
 #  - $CHILD is a checkout of the child repo in the cwd
@@ -16,7 +29,7 @@ BRANCHES_TO_MERGE="master"  # Space separated list of branches
 # - bfg is installed in ./ (see https://rtyley.github.io/bfg-repo-cleaner/)
 
 this_file="${BASH_SOURCE[0]}"
-script_dir="${this_file%/*}"
+script_dir=`realpath "${this_file%/*}"`
 
 (
     cd $CHILD
@@ -49,7 +62,7 @@ script_dir="${this_file%/*}"
       -- --all
 
     # Strip out large blobs
-    java -jar ../bfg-1.12.3.jar --strip-blobs-bigger-than 512K
+    java -jar ../bfg-1.13.0.jar --strip-blobs-bigger-than 512K
 
     git reflog expire --expire=now --all
     git gc --prune=now --aggressive
