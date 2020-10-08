@@ -18,6 +18,7 @@ set -ex
 # Clone https://github.com/nipunn1313/git_repo_merges as a sibling repo
 # Clone $CHILD and $PARENT as sibling repos
 # Install git-filter-repo https://github.com/newren/git-filter-repo
+#   this script will require https://github.com/newren/git-filter-repo/pull/162
 #
 # Must manually run from within the $PARENT - once
 # > git remote add "${CHILD}" ../"${CHILD}"
