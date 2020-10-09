@@ -18,7 +18,6 @@ set -ex
 # Clone https://github.com/nipunn1313/git_repo_merges as a sibling repo
 # Clone $CHILD and $PARENT as sibling repos
 # Install git-filter-repo https://github.com/newren/git-filter-repo
-#   this script will require https://github.com/newren/git-filter-repo/pull/162
 #
 # Must manually run from within the $PARENT - once
 # > git remote add "${CHILD}" ../"${CHILD}"
@@ -42,9 +41,8 @@ script_dir=`realpath "${this_file%/*}"`
     git filter-repo \
         $FILTER_REPO_ARGS \
         --to-subdirectory-filter $SUBDIR \
-        --message-callback '
-assert os.environ.get("GIT_COMMIT") is not None
-return message + "\nOriginal '$CHILD' Repo Git Commit: {}".format(os.environ.get("GIT_COMMIT")).encode("utf-8")
+        --commit-callback '
+commit.message = commit.message + b"\nOriginal '$CHILD' Repo Git Commit: " + commit.original_id
 '
 
     git reflog expire --expire=now --all
