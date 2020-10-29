@@ -11,6 +11,7 @@ set -ex
 : ${PARENT:=please_set_the_PARENT_env_variable}
 : ${SUBDIR:=please_set_the_SUBDIR_env_variable}
 : ${BRANCHES_TO_MERGE:="master"}  # Space separated list of branches. Should include master explicitly.
+: ${REFS_PREFIX:="$SUBDIR/"}  # What to prefix branch/tag names with. Default to $SUBDIR/
 : ${FILTER_REPO_ARGS}
 
 # PreReqs
@@ -30,6 +31,14 @@ set -ex
 this_file="${BASH_SOURCE[0]}"
 script_dir=`realpath "${this_file%/*}"`
 
+# Make sure that the child is set as a remote
+echo "Verify that $PARENT has $CHILD set as a remote"
+git -C $PARENT remote get-url $CHILD
+
+echo "Verifying working directories are clean"
+git -C $PARENT diff --quiet --exit-code
+git -C $CHILD diff --quiet --exit-code
+
 (
     cd $CHILD
 
@@ -38,12 +47,17 @@ script_dir=`realpath "${this_file%/*}"`
         git reset --hard origin/$BRANCH || git reset --hard $BRANCH
     done
 
-    git filter-repo \
+    # Eval so that $FILTER_REPO_ARGS can escape strings w/ spaces
+    eval git filter-repo \
         $FILTER_REPO_ARGS \
         --to-subdirectory-filter $SUBDIR \
-        --commit-callback '
-commit.message = commit.message + b"\nOriginal '$CHILD' Repo Git Commit: " + commit.original_id
-'
+        --commit-callback "'"'
+            commit.message = commit.message + b"\nOriginal '$CHILD' Repo Git Commit: " + commit.original_id
+        '"'"
+        --refname-callback "'"'
+            parts = refname.split(b\"/\") ;
+            return b\"/\".join(parts[0:2] + [b\"'$REFS_PREFIX'\" + parts[2]] + parts[3:])
+        '"'"
 
     git reflog expire --expire=now --all
     git gc --prune=now --aggressive
@@ -55,8 +69,8 @@ commit.message = commit.message + b"\nOriginal '$CHILD' Repo Git Commit: " + com
     ORIG_MASTER=`git rev-parse master`
 
     for BRANCH in $BRANCHES_TO_MERGE; do
-        git checkout -B $BRANCH $ORIG_MASTER  # New branch will have the same name as the original child branch
+        git checkout -B ${REFS_PREFIX}$BRANCH $ORIG_MASTER  # New branch will have the same name as the original child branch
         git merge --allow-unrelated-histories \
-          -m "Merge $CHILD into $PARENT" $CHILD/${BRANCH}
+          -m "Merge $CHILD into $PARENT" $CHILD/${REFS_PREFIX}${BRANCH}
     done
 )
