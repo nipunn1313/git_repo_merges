@@ -53,10 +53,10 @@ git -C $CHILD diff --quiet --exit-code
         --to-subdirectory-filter $SUBDIR \
         --commit-callback "'"'
             commit.message = commit.message + b"\nOriginal '$CHILD' Repo Git Commit: " + commit.original_id
-        '"'"
+        '"'" \
         --refname-callback "'"'
-            parts = refname.split(b\"/\") ;
-            return b\"/\".join(parts[0:2] + [b\"'$REFS_PREFIX'\" + parts[2]] + parts[3:])
+            parts = refname.split(b"/")
+            return b"/".join(parts[0:2] + [b"'$REFS_PREFIX'" + parts[2]] + parts[3:])
         '"'"
 
     git reflog expire --expire=now --all
